@@ -1,66 +1,42 @@
-import { connectDB } from "../../../server/mongodb";
-import { Payment, User } from "../../models";
+import { connectDB } from "../../../../server/mongodb";
+import { Payment, User } from "../../../models";
 
 const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
 
 export default async function handler(req, res) {
-  const reqMethod = req.method;
+  if (req.method !== "POST") {
+    res
+      .status(405)
+      .send({ success: false, message: "Only POST requests allowed" });
+    return;
+  }
+
   const body = req.body;
   await connectDB();
 
-  switch (reqMethod) {
-    case "POST":
-      let validation = await paymentValidation(body);
-      if (!validation.isValid) {
-        return res
-          .status(400)
-          .json({ success: false, message: validation.message });
-      }
-      try {
-        //   serialize the date
-        var parts = body.expirationDate.split("-");
-        let expiration = new Date(parts[1], parts[0] - 1, 1);
-        body.expirationDate = expiration;
+  let validation = await paymentValidation(body);
+  if (!validation.isValid) {
+    return res
+      .status(400)
+      .json({ success: false, message: validation.message });
+  }
+  try {
+    //   serialize the date
+    var parts = body.expirationDate.split("-");
+    let expiration = new Date(parts[1], parts[0] - 1, 1);
+    body.expirationDate = expiration;
 
-        const newPayment = new Payment(body);
-        await newPayment.save();
-        return res.status(200).json({
-          success: true,
-          message: "Successfully add payment to the database",
-        });
-      } catch (error) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Invalid data for payment" });
-      }
-
-    case "GET":
-      const query = req.query;
-      const { user_id } = query;
-      if (!user_id) {
-        // GET ALL PAYMENT METHODS
-        const allPayments = await Payment.find({});
-        return res.status(200).json(allPayments);
-      } else {
-        //   GET ALL PAYMENTS OF A SPECIFIC USER
-        try {
-          const user = new ObjectId(user_id);
-          const payments = await Payment.find({ user: user });
-          if (!payments) {
-            return res.status(400).json({
-              success: false,
-              message: "Payments of the user not found",
-            });
-          }
-          return res.status(200).json(payments);
-        } catch (error) {
-          res.status(500).json({
-            success: false,
-            message: "Payments of the user not found",
-          });
-        }
-      }
+    const newPayment = new Payment(body);
+    await newPayment.save();
+    return res.status(200).json({
+      success: true,
+      message: "Successfully add payment to the database",
+    });
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid data for payment" });
   }
 }
 
