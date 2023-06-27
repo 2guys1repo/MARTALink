@@ -1,5 +1,5 @@
 import { connectDB } from "../../../server/mongodb";
-import User from "../../models/user.js";
+import { User } from "../../models";
 import bcrypt from "bcrypt";
 
 export default async function handler(req, res) {
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
         body.password = await encryptPassword(body.password);
         const newUser = new User(body);
         await newUser.save();
-        console.log(newUser.password);
+        // console.log(newUser.password);
         return res.status(200).json({
           success: true,
           message: "Successfully add user to the database",
@@ -41,8 +41,8 @@ export default async function handler(req, res) {
       const { id } = query;
       if (!id) {
         // GET ALL USERS
-        const allUser = await User.find({});
-        return res.status(200).json(allUser);
+        const allUsers = await User.find({});
+        return res.status(200).json(allUsers);
       } else {
         //   GET A SPECIFIC USER
         try {
@@ -98,3 +98,12 @@ const userValidation = async (data) => {
   }
   return { isValid: true, message: "User and password input are valid." };
 };
+
+// {
+//   "firstName": "test2",
+//   "lastName": "daylatest2",
+//   "email": "aloalo4244@gmail.com",
+//   "phoneNumber": 4048844376,
+//   "password": "thisisatest",
+//   "profilePicture": "chua co hinh"
+// }
