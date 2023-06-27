@@ -55,7 +55,10 @@ export default async function handler(req, res) {
           }
           return res.status(200).json(payments);
         } catch (error) {
-          res.status(500).json({ success: false, message: "Server error" });
+          res.status(500).json({
+            success: false,
+            message: "Payments of the user not found",
+          });
         }
       }
   }
