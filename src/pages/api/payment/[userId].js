@@ -5,6 +5,12 @@ const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
 
 export default async function handler(req, res) {
+  if (req.method != "GET") {
+    return res
+      .status(400)
+      .send({ success: false, message: "Only GET requests allowed" });
+  }
+
   await connectDB();
 
   const { userId } = req.query;

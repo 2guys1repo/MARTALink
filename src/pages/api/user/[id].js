@@ -2,6 +2,11 @@
 import { connectDB } from "../../../../server/mongodb";
 import { User } from "../../../models";
 export default async function handler(req, res) {
+  if (req.method != "GET") {
+    return res
+      .status(400)
+      .send({ success: false, message: "Only GET requests allowed" });
+  }
   const { id } = req.query;
   await connectDB();
   try {
