@@ -2,6 +2,12 @@ import { connectDB } from "../../../../server/mongodb";
 import { Payment } from "../../../models";
 
 export default async function handler(req, res) {
+  if (req.method != "GET") {
+    return res
+      .status(400)
+      .send({ success: false, message: "Only GET requests allowed" });
+  }
+
   await connectDB();
 
   try {

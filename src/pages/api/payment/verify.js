@@ -1,70 +1,73 @@
 import { connectDB } from "../../../../server/mongodb";
-import { Payment, User } from "../../../models";
-
-const mongoose = require("mongoose");
-const ObjectId = mongoose.Types.ObjectId;
+import { Payment } from "../../../models";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    res
+  if (req.method != "POST") {
+    return res
       .status(400)
       .send({ success: false, message: "Only POST requests allowed" });
-    return;
   }
-
   const body = req.body;
   await connectDB();
 
-  let validation = await paymentValidation(body);
+  let validation = await inputValidation(body);
+
+  // if input is ok start to look it up and return it
   if (!validation.isValid) {
     return res
       .status(400)
       .json({ success: false, message: validation.message });
   }
   try {
-    //   serialize the date
     var parts = body.expirationDate.split("-");
     let expiration = new Date(parts[1], parts[0] - 1, 1);
     body.expirationDate = expiration;
 
-    const newPayment = new Payment(body);
-    await newPayment.save();
-    return res.status(200).json({
-      success: true,
-      message: "Successfully add payment to the database",
+    const lookup = await Payment.findOne({
+      nameOnCard: body.nameOnCard,
+      billingAddress: body.billingAddress,
+      cardNumber: body.cardNumber,
+      expirationDate: body.expirationDate,
+      securityCode: body.securityCode,
+      zipCode: body.zipCode,
     });
-  } catch (error) {
+    if (!lookup) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid payment",
+      });
+    }
     return res
-      .status(400)
-      .json({ success: false, message: "Invalid data for payment" });
+      .status(200)
+      .json({ success: true, message: "Payment found in the database" });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
   }
 }
 
 // validate the information inputs for creating payment
-const paymentValidation = async (data) => {
+
+const inputValidation = async (data) => {
   const {
-    user,
     nameOnCard,
     billingAddress,
     cardNumber,
     expirationDate,
-    zipCode,
     securityCode,
+    zipCode,
   } = data;
-  let userCheck = await userChecker(user);
+
   let nameCheck = nameChecker(nameOnCard);
   let addressCheck = addressChecker(billingAddress);
   let numberCheck = numberChecker(cardNumber);
   let expireCheck = expireChecker(expirationDate);
   let zipCheck = zipChecker(zipCode);
   let codeCheck = codeChecker(securityCode);
-  let paymentFound = await Payment.findOne({ cardNumber: cardNumber });
-  if (!userCheck) {
-    return {
-      isValid: false,
-      message: "User are not found",
-    };
-  } else if (!nameCheck) {
+
+  if (!nameCheck) {
     return {
       isValid: false,
       message: "Please enter a valid name on card.",
@@ -78,11 +81,6 @@ const paymentValidation = async (data) => {
     return {
       isValid: false,
       message: "Please enter a valid card number.",
-    };
-  } else if (paymentFound) {
-    return {
-      isValid: false,
-      message: "Payment is already registered.",
     };
   } else if (!expireCheck) {
     return {
@@ -106,19 +104,6 @@ const paymentValidation = async (data) => {
   };
 };
 
-// Check if the user exists in the database
-const userChecker = async (user_id) => {
-  const ObjectId = mongoose.Types.ObjectId; // Get the ObjectId class from Mongoose
-  const objectId = new ObjectId(user_id);
-  let userFound = await User.findOne({ _id: objectId });
-
-  if (userFound) {
-    return userFound;
-  } else {
-    return false;
-  }
-};
-
 function nameChecker(name) {
   var pattern = /^[a-zA-Z]{2,}(\s[a-zA-Z]{2,})+$/;
   if (pattern.test(name)) {
@@ -135,6 +120,10 @@ function addressChecker(name) {
   } else {
     return false;
   }
+}
+function zipChecker(zipCode) {
+  const zipCodeRegex = /^\d{5}(?:-\d{4})?$/;
+  return zipCodeRegex.test(zipCode);
 }
 
 function numberChecker(cardNumber) {
@@ -160,11 +149,6 @@ function numberChecker(cardNumber) {
     double = !double;
   }
   return sum % 10 === 0;
-}
-
-function zipChecker(zipCode) {
-  const zipCodeRegex = /^\d{5}(?:-\d{4})?$/;
-  return zipCodeRegex.test(zipCode);
 }
 
 function codeChecker(securityCode) {
