@@ -22,9 +22,12 @@ export default async function handler(req, res) {
       .json({ success: false, message: validation.message });
   }
   try {
+    // checker date for format + 2 o back end check input cho date tu 2 cai o
+    // chan neu ma co payment roi
     //   serialize the date
     var parts = body.expirationDate.split("-");
     let expiration = new Date(parts[1], parts[0] - 1, 1);
+
     body.expirationDate = expiration;
 
     const newPayment = new Payment(body);
