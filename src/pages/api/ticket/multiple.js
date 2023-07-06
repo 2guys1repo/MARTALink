@@ -20,29 +20,29 @@ export default async function hangdler(req, res) {
   await connectDB();
 
   const { ticketsArr } = body;
-  console.log(ticketsArr);
+  // console.log(ticketsArr);
   try {
     ticketsArr.forEach(async (body) => {
       // get the general information for the ticket
-      const { user, passType } = body;
-
-      // create a new default ticket
-      const newTicket = new Ticket({
-        user: user,
-        expirationDate: new Date(),
-        ticketPrice: 0,
-      });
+      let type = typeCheck(body);
+      const chosenTicket = ticketDict[type];
 
       // business logic for expired date
-      const lookUp = ticketDict[passType];
-      const purchase = newTicket.datePurchased;
+      const purchase = new Date();
       const expire = new Date(purchase);
-      expire.setDate(purchase.getDate() + lookUp.duration);
+      expire.setDate(purchase.getDate() + chosenTicket.duration);
+
+      let newBody = {
+        user: body.user,
+        datePurchased: purchase,
+        expirationDate: expire,
+        ticketPrice: chosenTicket.price,
+      };
+      // create a new default ticket
+      const newTicket = new Ticket(newBody);
 
       // modify the new generated ticket based on the passed info
-      newTicket.expirationDate = expire;
-      newTicket.ticketPrice = lookUp.price;
-      newTicket[passType] = true;
+      newTicket[type] = true;
 
       //save the new ticket to the database
       await newTicket.save();
@@ -55,5 +55,16 @@ export default async function hangdler(req, res) {
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }
-  //   let validation = ticketsValidation(body);
 }
+const typeCheck = (data) => {
+  const { isSingleUsePass, isDayPass, isMonthPass, isYearPass } = data;
+  if (isSingleUsePass) {
+    return "isSingleUsePass";
+  } else if (isDayPass) {
+    return "isDayPass";
+  } else if (isMonthPass) {
+    return "isMonthPass";
+  } else if (isYearPass) {
+    return "isYearPass";
+  }
+};
