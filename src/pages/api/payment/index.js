@@ -1,5 +1,5 @@
 import { connectDB } from "../../../../server/mongodb";
-import { Payment } from "../../../models";
+import { Payment } from "../../../../server/mongodb/models";
 
 export default async function handler(req, res) {
   if (req.method != "GET") {

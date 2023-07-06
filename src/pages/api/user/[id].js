@@ -1,6 +1,6 @@
 // DYNAMIC ROUTING
 import { connectDB } from "../../../../server/mongodb";
-import { User } from "../../../models";
+import { User } from "../../../../server/mongodb/models";
 export default async function handler(req, res) {
   if (req.method != "GET") {
     return res

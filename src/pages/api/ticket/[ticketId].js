@@ -1,5 +1,5 @@
 import { connectDB } from "../../../../server/mongodb";
-import { Ticket } from "../../../models";
+import { Ticket } from "../../../../server/mongodb/models";
 const ticketType = [
   "isSingleUsePass",
   "isDayPass",

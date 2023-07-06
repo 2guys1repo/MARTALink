@@ -1,5 +1,5 @@
 import { connectDB } from "../../../../server/mongodb";
-import { Payment, User } from "../../../models";
+import { Payment, User } from "../../../../server/mongodb/models";
 
 const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;

@@ -1,5 +1,5 @@
 import { connectDB } from "../../../../server/mongodb";
-import { Ticket } from "../../../models";
+import { Ticket } from "../../../../server/mongodb/models";
 // currency of US dollar
 const ticketDict = {
   isSingleUsePass: { price: 3, duration: 1095 },
